@@ -588,7 +588,9 @@ def train():
     elif args.dataset_type == 'tat':
         images, poses, hwf = load_tat_data(args.datadir, args.half_res)
         print('Loaded tat', images.shape, hwf, args.datadir)
-        i_train, i_val, i_test = np.arange(0, images.shape[0])
+        i_train = np.arange(0, images.shape[0])
+        i_val = i_train
+        i_test = i_train
 
         near = 2.
         far = 6.
