@@ -17,6 +17,7 @@ from run_nerf_helpers import *
 from load_llff import load_llff_data
 from load_deepvoxels import load_dv_data
 from load_blender import load_blender_data
+from load_tat import load_tat_data
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -492,7 +493,7 @@ def config_parser():
 
     # dataset options
     parser.add_argument("--dataset_type", type=str, default='llff', 
-                        help='options: llff / blender / deepvoxels')
+                        help='options: llff / blender / deepvoxels / tat')
     parser.add_argument("--testskip", type=int, default=8, 
                         help='will load 1/N images from test/val sets, useful for large datasets like deepvoxels')
 
@@ -527,7 +528,7 @@ def config_parser():
                         help='frequency of weight ckpt saving')
     parser.add_argument("--i_testset", type=int, default=50000, 
                         help='frequency of testset saving')
-    parser.add_argument("--i_video",   type=int, default=50000, 
+    parser.add_argument("--i_video",   type=int, default=-50000, 
                         help='frequency of render_poses video saving')
 
     return parser
@@ -583,6 +584,14 @@ def train():
             images = images[...,:3]*images[...,-1:] + (1.-images[...,-1:])
         else:
             images = images[...,:3]
+
+    elif args.dataset_type == 'tat':
+        images, poses, hwf = load_tat_data(args.datadir, args.half_res)
+        print('Loaded tat', images.shape, hwf, args.datadir)
+        i_train, i_val, i_test = np.arange(0, images.shape[0])
+
+        near = 2.
+        far = 6.
 
     elif args.dataset_type == 'deepvoxels':
 
@@ -774,7 +783,7 @@ def train():
         #####           end            #####
 
         # Rest is logging
-        if i%args.i_weights==0:
+        if args.i_weights > 0 and i%args.i_weights==0:
             path = os.path.join(basedir, expname, '{:06d}.tar'.format(i))
             torch.save({
                 'global_step': global_step,
@@ -784,7 +793,7 @@ def train():
             }, path)
             print('Saved checkpoints at', path)
 
-        if i%args.i_video==0 and i > 0:
+        if args.i_video > 0 and i%args.i_video==0 and i > 0:
             # Turn on testing mode
             with torch.no_grad():
                 rgbs, disps = render_path(render_poses, hwf, args.chunk, render_kwargs_test)
@@ -800,7 +809,7 @@ def train():
             #     render_kwargs_test['c2w_staticcam'] = None
             #     imageio.mimwrite(moviebase + 'rgb_still.mp4', to8b(rgbs_still), fps=30, quality=8)
 
-        if i%args.i_testset==0 and i > 0:
+        if args.i_testset > 0 and i%args.i_testset==0 and i > 0:
             testsavedir = os.path.join(basedir, expname, 'testset_{:06d}'.format(i))
             os.makedirs(testsavedir, exist_ok=True)
             print('test poses shape', poses[i_test].shape)
