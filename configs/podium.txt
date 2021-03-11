@@ -1,0 +1,15 @@
+expname = tat_podium
+basedir = ./logs
+datadir = ./data/tat/podium_pw_0.50
+dataset_type = tat
+
+no_batching = True
+
+use_viewdirs = True
+lrate_decay = 500
+
+N_samples = 64
+N_importance = 128
+N_rand = 1024
+
+render_test = True
