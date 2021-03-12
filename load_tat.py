@@ -14,6 +14,7 @@ def load_tat_data(basedir, half_res=False):
 
     all_imgs = []
     all_poses = []
+    all_frameids = []
     for fname in frames:
         frame_id = int(os.path.splitext(fname)[0].split("_")[-1])
         img = (imageio.imread(fname) / 255.).astype(np.float32) # keep all 4 channels (RGBA)
@@ -22,14 +23,16 @@ def load_tat_data(basedir, half_res=False):
         R = Rs[frame_id]
         t = Ts[frame_id]
         pose = np.eye(4)
-        pose[:3, :3] = R.T
-        pose[:3, 3] = (-R.T @ t.reshape(3, 1)).ravel()
+        pose[:3, :3] = R
+        pose[:3, 3] = (t.reshape(3, 1)).ravel()
 
         all_imgs.append(img)
         all_poses.append(pose)
+        all_frameids.append(frame_id)
     
     imgs = np.array(all_imgs)
     poses = np.array(all_poses)
+    frameids = np.array(all_frameids)
 
     H, W = imgs[0].shape[:2]
     focal = Ks[0][0, 0]
@@ -49,4 +52,4 @@ def load_tat_data(basedir, half_res=False):
         imgs = imgs_half_res
         # imgs = tf.image.resize_area(imgs, [400, 400]).numpy()
 
-    return imgs, poses, [H, W, focal]
+    return imgs, poses, frameids, [H, W, focal]

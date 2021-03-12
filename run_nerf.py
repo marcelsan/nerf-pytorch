@@ -586,14 +586,14 @@ def train():
             images = images[...,:3]
 
     elif args.dataset_type == 'tat':
-        images, poses, hwf = load_tat_data(args.datadir, args.half_res)
+        images, poses, frameids, hwf = load_tat_data(args.datadir, args.half_res)
         print('Loaded tat', images.shape, hwf, args.datadir)
         i_train = np.arange(0, images.shape[0])
         i_val = i_train
         i_test = i_train
 
-        near = 2.
-        far = 6.
+        near = 1.
+        far = 8.
 
     elif args.dataset_type == 'deepvoxels':
 
